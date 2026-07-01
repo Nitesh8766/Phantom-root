@@ -26,6 +26,6 @@ Set `PORT` env var to override.
 - **Name:** Phantom Root
 - **Motto:** Nothing is Real
 - **Difficulty:** Intermediate → Advanced
-- **Flag:** FLAG{ph#n40m_r00t_m@s4er}
+  
 
 > Author's note: Do not share the flag or challenge walkthrough with players.
