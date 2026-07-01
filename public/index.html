@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Phantom Root — Nothing is Real</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--red:#cc0000;--red-dim:#4a0000;--red-dark:#1a0000;--red-bright:#ff0000}
+  html,body{background:#000;color:#cc2222;font-family:'Courier New',monospace;min-height:100vh;overflow-x:hidden}
+  ::selection{background:#cc0000;color:#000}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0a0000}::-webkit-scrollbar-thumb{background:#4a0000}
+
+  /* Scanlines */
+  body::after{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:9999}
+
+  /* Pages */
+  .page{display:none;min-height:100vh}
+  .page.active{display:flex;align-items:center;justify-content:center}
+  #admin-page.active{display:block;padding:24px}
+
+  /* Canvas matrix */
+  #matrix-canvas{position:fixed;top:0;left:0;z-index:0;pointer-events:none}
+
+  /* Biohazard bg */
+  .biohazard-bg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:70vmin;height:70vmin;opacity:.06;pointer-events:none;z-index:1}
+
+  /* Card */
+  .card{position:relative;z-index:10;width:100%;max-width:440px;margin:16px;border:1px solid #7a0000;background:rgba(0,0,0,.93);padding:32px;box-shadow:0 0 40px rgba(180,0,0,.3)}
+
+  /* Header */
+  .logo-row{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+  .cat-icon{width:40px;height:40px;border:1px solid #7a0000;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .brand-sub{font-size:10px;color:#7a0000;letter-spacing:.3em;text-transform:uppercase}
+  .brand-ver{font-size:9px;color:#3a0000;letter-spacing:.3em;text-transform:uppercase}
+  h1{font-size:28px;color:#cc4444;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+  .motto{font-size:11px;color:#4a0000;letter-spacing:.4em;text-transform:uppercase;margin-bottom:8px}
+  .meta-row{display:flex;gap:16px;font-size:9px;color:#3a0000;margin-bottom:28px}
+  .meta-row .on{color:#cc4444;animation:blink 1.5s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* Form */
+  .field-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .field-label{font-size:10px;color:#7a0000;letter-spacing:.2em;text-transform:uppercase}
+  .field-hint{font-size:9px;color:#3a0000}
+  .input-wrap{position:relative;margin-bottom:16px}
+  .input-arrow{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#5a0000;font-size:14px}
+  input[type=text],input[type=password],textarea{width:100%;background:#000;border:1px solid #4a0000;color:#cc4444;font-family:'Courier New',monospace;font-size:13px;padding:10px 12px 10px 28px;outline:none;transition:.2s}
+  input:focus,textarea:focus{border-color:#cc0000;box-shadow:0 0 10px rgba(180,0,0,.25)}
+  input::placeholder,textarea::placeholder{color:#2a0000}
+  textarea{padding-left:12px;resize:none;width:100%}
+
+  /* Buttons */
+  .btn{width:100%;background:#aa0000;border:1px solid #cc0000;color:#fff;font-family:'Courier New',monospace;font-size:13px;letter-spacing:.3em;text-transform:uppercase;padding:12px;cursor:pointer;transition:.2s}
+  .btn:hover{background:#cc0000;box-shadow:0 0 20px rgba(200,0,0,.5)}
+  .btn:disabled{background:#2a0000;color:#5a0000;border-color:#3a0000;cursor:not-allowed}
+
+  /* Alerts */
+  .alert{border:1px solid #7a0000;background:rgba(80,0,0,.15);padding:10px 12px;margin:12px 0;font-size:11px}
+  .alert.err{color:#ff4444;border-color:#aa0000}
+  .alert.ok{color:#44ff44;border-color:#004400;background:rgba(0,60,0,.15)}
+
+  /* Bottom links */
+  .bottom-links{display:flex;justify-content:space-between;margin-top:14px}
+  .bottom-links button{background:none;border:none;color:#3a0000;font-family:'Courier New',monospace;font-size:10px;cursor:pointer;letter-spacing:.1em}
+  .bottom-links button:hover{color:#7a0000}
+
+  /* Stats bar */
+  .stats-bar{display:flex;justify-content:space-between;margin-top:20px;padding-top:14px;border-top:1px solid #1a0000}
+  .stats-bar span{font-size:9px;color:#2a0000}
+
+  /* Footer */
+  .footer{text-align:center;margin-top:14px;font-size:9px;color:#2a0000}
+  .footer-warn{text-align:center;font-size:9px;color:#5a0000;margin-top:4px;animation:blink 2s infinite}
+
+  /* Glitch */
+  @keyframes glitch{0%{transform:translate(0)}10%{transform:translate(-4px,2px);filter:hue-rotate(90deg)}20%{transform:translate(4px,-2px)}30%{transform:translate(-3px,3px)}50%{transform:translate(-2px,1px);filter:hue-rotate(-90deg)}80%{transform:translate(4px,-2px)}100%{transform:translate(0);filter:none}}
+  .glitch{animation:glitch .6s linear}
+
+  /* Admin panel */
+  .admin-wrap{max-width:960px;margin:0 auto}
+  .admin-header{border:1px solid #7a0000;padding:20px;margin-bottom:16px;box-shadow:0 0 40px rgba(150,0,0,.3);display:flex;justify-content:space-between;align-items:center}
+  .admin-title{font-size:22px;color:#cc4444;letter-spacing:.15em;font-weight:700}
+  .admin-user{text-align:right;font-size:10px}
+  .admin-user .role{color:#cc4444}
+  .admin-user .auth-ok{color:#226622;animation:blink 2s infinite}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+  .stat-card{border:1px solid #3a0000;background:rgba(80,0,0,.08);padding:16px}
+  .stat-label{font-size:9px;color:#4a0000;letter-spacing:.2em;margin-bottom:6px;text-transform:uppercase}
+  .stat-val{font-size:18px;font-weight:700}
+  .flag-box{border:1px solid #aa0000;background:rgba(100,0,0,.15);padding:24px;margin-bottom:16px;box-shadow:0 0 30px rgba(200,0,0,.2)}
+  .flag-box h2{color:#cc4444;font-size:14px;letter-spacing:.2em;margin-bottom:14px}
+  .flag-inner{border:1px solid #7a0000;background:#000;padding:16px}
+  .flag-label{font-size:10px;color:#4a0000;letter-spacing:.2em;margin-bottom:6px;text-transform:uppercase}
+  .flag-val{font-size:22px;font-weight:700;color:#cc4444;letter-spacing:.1em;user-select:all}
+  .flag-note{font-size:10px;color:#4a0000;margin-top:6px}
+  .intel-box{border:1px solid #3a0000;background:#000;padding:20px;margin-bottom:16px}
+  .intel-box h2{color:#7a0000;font-size:13px;letter-spacing:.15em;margin-bottom:12px}
+  .intel-row{display:flex;gap:12px;border-bottom:1px solid #1a0000;padding-bottom:10px;margin-bottom:10px;font-size:11px}
+  .intel-row:last-child{border-bottom:none;margin-bottom:0}
+  .intel-key{color:#4a0000;width:80px;flex-shrink:0;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .intel-val{color:#cc4444;line-height:1.5}
+  .intel-val code{background:rgba(100,0,0,.2);padding:1px 4px;color:#ff4444}
+  .intel-val.warn{color:#886600}
+  .incomplete{border:1px solid #2a0000;padding:14px;text-align:center;font-size:10px;color:#3a0000;margin-top:8px}
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- ═══ LOGIN PAGE ═══ -->
+<div class="page active" id="login-page">
+  <svg class="biohazard-bg" viewBox="0 0 100 100" fill="#cc0000">
+    <path d="M50 5C25 5 5 25 5 50C5 75 25 95 50 95C75 95 95 75 95 50C95 25 75 5 50 5ZM50 20C55 20 60 25 60 30C60 38 53 43 50 45C47 43 40 38 40 30C40 25 45 20 50 20ZM30 65C25 58 22 50 22 42C28 40 35 43 38 48C36 55 33 61 30 65ZM70 65C67 61 64 55 62 48C65 43 72 40 78 42C78 50 75 58 70 65ZM50 75C44 72 39 67 36 62C40 58 45 56 50 56C55 56 60 58 64 62C61 67 56 72 50 75Z"/>
+  </svg>
+  <div class="card" id="login-card">
+    <div class="logo-row">
+      <div class="cat-icon">
+        <svg viewBox="0 0 40 40" width="32" height="32" fill="none">
+          <ellipse cx="20" cy="14" rx="8" ry="7" fill="#1a0000" stroke="#cc0000" stroke-width="1"/>
+          <circle cx="16" cy="13" r="2" fill="#ff0000"/><circle cx="24" cy="13" r="2" fill="#ff0000"/>
+          <path d="M13 19 Q20 23 27 19" stroke="#cc0000" stroke-width="1" fill="none"/>
+          <path d="M10 12 Q13 8 16 12" stroke="#cc0000" stroke-width="1.5" fill="none"/>
+          <path d="M30 12 Q27 8 24 12" stroke="#cc0000" stroke-width="1.5" fill="none"/>
+          <ellipse cx="20" cy="30" rx="10" ry="8" fill="#0d0000" stroke="#cc0000" stroke-width="1"/>
+          <line x1="18" y1="14" x2="10" y2="13" stroke="#cc0000" stroke-width="0.8"/>
+          <line x1="22" y1="14" x2="30" y2="13" stroke="#cc0000" stroke-width="0.8"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-sub">PhantomCorp Systems</div>
+        <div class="brand-ver">RAVEN — ACCESS CONTROL v2.3</div>
+      </div>
+    </div>
+    <h1>PHANTOM ROOT</h1>
+    <div class="motto">NOTHING IS REAL</div>
+    <div class="meta-row">
+      <span>ROLE: PR-ROOT-7</span>
+      <span>CLEARANCE: LEVEL-4</span>
+      <span>STATUS: <span class="on">ONLINE</span></span>
+    </div>
+
+    <form id="login-form" onsubmit="doLogin(event)">
+      <div class="field-label-row"><span class="field-label">Ghost Identifier</span><span class="field-hint">// GUEST.23</span></div>
+      <div class="input-wrap">
+        <span class="input-arrow">›</span>
+        <input type="text" id="username" placeholder="Enter ghost identifier" autocomplete="off"/>
+      </div>
+      <div class="field-label-row"><span class="field-label">Access Key</span><span class="field-hint">// AUTH.PASS</span></div>
+      <div class="input-wrap">
+        <span class="input-arrow">›</span>
+        <input type="password" id="password" placeholder="Enter access key"/>
+      </div>
+      <div id="login-alert" class="alert err" style="display:none"></div>
+      <button class="btn" type="submit" id="login-btn">AUTHENTICATE ›</button>
+    </form>
+
+    <div class="bottom-links">
+      <button>RECOVER CREDENTIALS</button>
+      <button>REQUEST ACCESS</button>
+    </div>
+    <div class="stats-bar">
+      <span>SYS: ........</span><span>PAT: 0</span><span>ARC: TLS 1.3</span><span>SEC: AES-256</span>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:16px;left:0;right:0;text-align:center">
+    <div class="footer">© 2024 PhantomCorp Systems, Inc. Unauthorized access prohibited.</div>
+    <div class="footer-warn">⚠ THIS SYSTEM IS MONITORED. ALL ACTIONS ARE LOGGED AND AUDITED.</div>
+  </div>
+</div>
+
+<!-- ═══ JWT VERIFY PAGE ═══ -->
+<div class="page" id="jwt-page">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <div style="width:8px;height:8px;border-radius:50%;background:#cc0000;animation:blink 1.5s infinite"></div>
+      <span style="font-size:10px;color:#5a0000;letter-spacing:.3em">PHANTOMCORP — SECURE TOKEN GATEWAY</span>
+    </div>
+    <h1 style="font-size:22px;margin-bottom:4px">TOKEN VERIFICATION</h1>
+    <div class="motto" style="margin-bottom:16px">PHANTOM ROOT // AUTH PORTAL</div>
+
+    <div class="alert" style="margin-bottom:16px;color:#7a0000;border-color:#3a0000;background:rgba(40,0,0,.3)">
+      ⚠ RESTRICTED ENDPOINT — /x7k2/token-check<br/>
+      Paste your signed JWT token below to request elevated access.
+    </div>
+
+    <form onsubmit="doVerify(event)">
+      <div class="field-label" style="margin-bottom:8px">JWT TOKEN INPUT</div>
+      <textarea id="jwt-input" rows="5" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+      <div style="font-size:9px;color:#2a0000;margin-bottom:12px">// Provide a valid HS256-signed token with admin role claim</div>
+      <div id="jwt-alert" class="alert" style="display:none"></div>
+      <button class="btn" type="submit" id="jwt-btn">SUBMIT TOKEN ›</button>
+    </form>
+
+    <div class="stats-bar"><span>ALG: HS256</span><span>TYPE: JWT</span><span>VER: v2.3.1</span></div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN PANEL ═══ -->
+<div class="page" id="admin-page">
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#cc0000;animation:blink 1.5s infinite"></div>
+          <span style="font-size:10px;color:#7a0000;letter-spacing:.2em">PHANTOMCORP — ADMIN CONTROL PANEL</span>
+        </div>
+        <div class="admin-title">PHANTOM ROOT</div>
+        <div style="font-size:10px;color:#3a0000;letter-spacing:.3em">NOTHING IS REAL</div>
+      </div>
+      <div class="admin-user">
+        <div>USER: <span style="color:#cc4444">guest</span></div>
+        <div>ROLE: <span class="role">ADMIN</span></div>
+        <div class="auth-ok">● AUTHENTICATED</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Active Sessions</div><div class="stat-val" style="color:#cc4444">247</div></div>
+      <div class="stat-card"><div class="stat-label">Threat Level</div><div class="stat-val" style="color:#cc0000;animation:blink 2s infinite">CRITICAL</div></div>
+      <div class="stat-card"><div class="stat-label">System Status</div><div class="stat-val" style="color:#886600">COMPROMISED</div></div>
+    </div>
+
+    <div class="flag-box">
+      <h2>⚑ PRIVILEGED ACCESS GRANTED</h2>
+      <p style="font-size:11px;color:#7a0000;margin-bottom:14px">Welcome, ADMIN. Your token has been verified. You have accessed the restricted panel.</p>
+      <div class="flag-inner">
+        <div class="flag-label">CAPTURE THIS FLAG — PART 1 OF 2:</div>
+        <div class="flag-val">FLAG{ph#n40m_</div>
+        <div class="flag-note">// This is only half. The real root goes deeper.</div>
+      </div>
+    </div>
+
+    <div class="intel-box">
+      <h2>› INTELLIGENCE REPORT</h2>
+      <div class="intel-row">
+        <div class="intel-key">RECON NOTE</div>
+        <div class="intel-val">Not all users are equal. Some accounts hold more than they reveal.</div>
+      </div>
+      <div class="intel-row">
+        <div class="intel-key">API LEAK</div>
+        <div class="intel-val">The user endpoint exposes records without authorization checks.<br/>
+          <code>GET /api/user?id={id}</code> — iterate IDs to find what's hidden.</div>
+      </div>
+      <div class="intel-row">
+        <div class="intel-key">TARGET</div>
+        <div class="intel-val">System accounts are not always at predictable positions. Enumerate.</div>
+      </div>
+      <div class="intel-row">
+        <div class="intel-key">HINT</div>
+        <div class="intel-val warn">⚠ The second half of your flag is waiting in the API. Try <code>/api/user?id=1</code> through <code>id=10</code>. One of them is not like the others.</div>
+      </div>
+    </div>
+
+    <div class="incomplete">
+      FLAG{ph#n40m_ ... [SECOND HALF MISSING] ...<br/>
+      <span style="color:#2a0000">Complete the flag. The root is deeper than admin access.</span>
+    </div>
+    <div class="footer" style="margin-top:12px">© 2024 PhantomCorp Systems — Session monitored. All access logged.</div>
+  </div>
+</div>
+
+<script>
+// ─── Matrix Rain ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+const chars='01アイウエオカキクケコPHANTOMROOT!@#$%^&*';
+let drops=[];
+function initDrops(){drops=Array(Math.floor(canvas.width/20)).fill(1)}
+initDrops(); window.addEventListener('resize',initDrops);
+setInterval(()=>{
+  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.font='14px monospace';
+  drops.forEach((y,i)=>{
+    ctx.fillStyle=Math.random()>.85?'#ff0000':'#4a0000';
+    ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*20,y*20);
+    if(y*20>canvas.height&&Math.random()>.975)drops[i]=0;
+    drops[i]++;
+  });
+},50);
+
+// ─── Router ───────────────────────────────────────────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+window.addEventListener('hashchange',route);
+window.addEventListener('load',route);
+function route(){
+  const h=location.hash;
+  if(h==='#/x7k2/token-check') showPage('jwt-page');
+  else if(h==='#/admin'){
+    if(localStorage.getItem('phantom_role')==='admin') showPage('admin-page');
+    else showPage('login-page');
+  }
+  else showPage('login-page');
+}
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+async function doLogin(e){
+  e.preventDefault();
+  const btn=document.getElementById('login-btn');
+  const alertEl=document.getElementById('login-alert');
+  const username=document.getElementById('username').value;
+  const password=document.getElementById('password').value;
+  btn.disabled=true; btn.textContent='AUTHENTICATING...'; alertEl.style.display='none';
+  try{
+    const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const data=await res.json();
+    document.getElementById('login-card').classList.add('glitch');
+    setTimeout(()=>document.getElementById('login-card').classList.remove('glitch'),700);
+    alertEl.style.display='block';
+    alertEl.textContent=res.status===400?'⚠ Input validation failed. Request logged.':'✗ Authentication failed. Invalid ghost identifier or access key.';
+  }catch{
+    alertEl.style.display='block'; alertEl.textContent='✗ Connection error.';
+  }
+  btn.disabled=false; btn.textContent='AUTHENTICATE ›';
+}
+
+// ─── JWT Verify ───────────────────────────────────────────────────────────────
+async function doVerify(e){
+  e.preventDefault();
+  const token=document.getElementById('jwt-input').value.trim();
+  const alertEl=document.getElementById('jwt-alert');
+  const btn=document.getElementById('jwt-btn');
+  if(!token)return;
+  btn.disabled=true; btn.textContent='VERIFYING TOKEN...'; alertEl.style.display='none';
+  try{
+    const res=await fetch('/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
+    const data=await res.json();
+    alertEl.style.display='block';
+    if(res.ok&&data.success){
+      alertEl.className='alert ok'; alertEl.textContent='✓ TOKEN VERIFIED. ELEVATED ACCESS GRANTED. Redirecting...';
+      localStorage.setItem('phantom_token',token); localStorage.setItem('phantom_role','admin');
+      setTimeout(()=>{location.hash='#/admin';},1800);
+    }else{
+      alertEl.className='alert err'; alertEl.textContent='✗ '+(data.message||data.error||'Token verification failed.');
+    }
+  }catch{alertEl.className='alert err';alertEl.textContent='✗ Connection error.';}
+  btn.disabled=false; btn.textContent='SUBMIT TOKEN ›';
+}
+</script>
+</body>
+</html>
