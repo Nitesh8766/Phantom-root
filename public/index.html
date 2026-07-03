@@ -336,7 +336,7 @@ async function doVerify(e){
     if(res.ok&&data.success){
       alertEl.className='alert ok'; alertEl.textContent='✓ TOKEN VERIFIED. ELEVATED ACCESS GRANTED. Redirecting...';
       localStorage.setItem('phantom_token',token); localStorage.setItem('phantom_role','admin');
-      setTimeout(()=>{location.hash='#/admin';},1800);
+      setTimeout(()=>{window.location.href='/admin';},1800);
     }else{
       alertEl.className='alert err'; alertEl.textContent='✗ '+(data.message||data.error||'Token verification failed.');
     }
